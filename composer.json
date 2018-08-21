@@ -1,0 +1,15 @@
+{
+    "name": "ghindows/php-signed-soap-client",
+    "type": "library",
+    "description": "PHP SoapClient with SOAP Message Security",
+    "keywords": [
+        "php","soap","client","ssl","OAuth","key-pair"
+    ],
+    "homepage": "https://github.com/ghindows/soap-client-bundle",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Ghindows\\SoapClient\\": "src"
+        }
+    }
+}

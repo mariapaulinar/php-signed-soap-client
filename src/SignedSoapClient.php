@@ -1,8 +1,6 @@
 <?php
-/**
- * SoapClient extensions which adds ability to sign messages and open HTTPS connections
- * $Id$
- */
+
+namespace Ghindows\SoapClient;
 
 /**
  *
@@ -11,8 +9,11 @@
  * SSL settings should be passed on instance creation within `options` associated array.
  * Available settings are identical to the HTTPRequest class settings, e.g.
  *
- *    $client = new SignedSoapClient('https://example.com?wsdl', array('ssl' => array('cert' => '/file',
- *          'certpasswd' => 'password')));
+ *    $client = new SignedSoapClient('https://example.com?wsdl', 
+ *                  array('ssl' => array('cert' => '/file',
+ *                        'certpasswd' => 'password')
+ *                        )
+ *                  );
  *
  * SSL certificate could be in PEM or PKCS12 format.
  *
@@ -24,7 +25,7 @@
  * on Body). Make sure that signed element has an wsu:Id attribute.
  *
  */
-class SignedSoapClient extends SoapClient
+class SignedSoapClient extends \SoapClient
 {
     // `xmllint` path
     const XMLLINT_PATH          = '/usr/bin/xmllint';
@@ -99,7 +100,7 @@ class SignedSoapClient extends SoapClient
      */
     function canonicalizeNode($node)
     {
-        $dom = new DOMDocument('1.0', 'utf-8');
+        $dom = new \DOMDocument('1.0', 'utf-8');
         $dom->appendChild($dom->importNode($node, true));
         return $this->canonicalizeXML($dom->saveXML($dom->documentElement));
     }
@@ -115,7 +116,7 @@ class SignedSoapClient extends SoapClient
      */
     function buildSignedInfo($dom, $ids)
     {
-        $xp = new DOMXPath($dom);
+        $xp = new \DOMXPath($dom);
         $xp->registerNamespace('SOAP-ENV', self::SOAP_NS);
         $xp->registerNamespace('wsu', self::WSU_NS);
         $xp->registerNamespace('wsse', self::WSSE_NS);
@@ -158,7 +159,7 @@ class SignedSoapClient extends SoapClient
 
     /**
      * Prepares wsse:SecurityToken element based on public certificate
-     * 
+     *
      * @param DOMDocument $dom
      * @param string $cert
      * @param string $certpasswd
@@ -184,6 +185,9 @@ class SignedSoapClient extends SoapClient
         } else {
             // for PEM files
             $pkeyid = openssl_pkey_get_private($cert);
+
+            echo $cert.PHP_EOL;
+
             $tempcert = openssl_x509_read($cert);
             openssl_x509_export($tempcert, $pubcert);
             openssl_x509_free($tempcert);
@@ -208,27 +212,30 @@ class SignedSoapClient extends SoapClient
      * @param int $version
      * @return string
      */
-    function __doRequest($request, $location, $action, $version)
+    function __doRequest($request, $location, $action, $version,$one_way = NULL)
     {
+
         // update request with security headers
-        $dom = new DOMDocument('1.0', 'utf-8');
+        $dom = new \DOMDocument('1.0', 'utf-8');
         $dom->loadXML($request);
 
-        $xp = new DOMXPath($dom);
+        $xp = new \DOMXPath($dom);
         $xp->registerNamespace('SOAP-ENV', self::SOAP_NS);
+
+        $bodynode = $xp->query('/SOAP-ENV:Envelope/SOAP-ENV:Body')->item(0);
 
         // find or create SoapHeader
         $headernode = $xp->query('/SOAP-ENV:Envelope/SOAP-ENV:Header')->item(0);
-        if (!$headernode)
+        if (!$headernode) {
             $headernode = $dom->documentElement->insertBefore($dom->createElementNS(self::SOAP_NS, 'SOAP-ENV:Header'), $bodynode);
+        }
 
         /**
-         * mark SOAP-ENV:Body with wsu:Id for signing 
+         * mark SOAP-ENV:Body with wsu:Id for signing
          *
          * >> if you want to sign other elements - mark them on this step and provide id's on the later step
          *
          */
-        $bodynode = $xp->query('/SOAP-ENV:Envelope/SOAP-ENV:Body')->item(0);
         $bodynode->setAttributeNS(self::WSU_NS, 'wsu:Id', 'reqBody');
 
         // prepare Security element
@@ -260,20 +267,13 @@ class SignedSoapClient extends SoapClient
 
         // convert new document to string
         $request = $dom->saveXML();
+        
 
-        // make our own HTTPRequest call with SSL certificate
-        $options = array('timeout' => $this->_timeout);
-        if ($this->_ssl_options)
-            $options['ssl'] = $this->_ssl_options;
-        $request = new HTTPRequest($location, HTTPRequest::METH_POST, $options);
-        $request->setHeaders(array(
-            'Content-Type' => 'application/soap+xml; charset=utf-8',
-            'Content-Length' => mb_strlen($request, '8bit'),
-            'SOAPAction' => $action
-        ));
-        $request->setBody($request);
-        $request->send();
-        return $request->getResponseBody();
+         $result = parent::__doRequest($request, $location, $action, $version);
+         
+	 return $result;
+
     }
 }
 ?>
+

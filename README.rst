@@ -2,13 +2,13 @@
 PHP SoapClient with SOAP Message Security
 =======
 
+SoapClient extensions which adds ability to sign messages and open HTTPS connections
 
 Requirements
 ------------
 
 - PHP compiled with SOAP support
 - xmllint_ utility (ubuntu/debian has it in libxml2-utils package)
-- 
 
 .. _xmllint: http://xmlsoft.org/xmllint.html
 
