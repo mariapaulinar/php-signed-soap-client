@@ -37,3 +37,14 @@ HTTP options, identical to HTTPRequest_ class request options are accepted too::
 
 Class signes SOAP-ENV:Body part of the message by default, this behaviour can be changed
 in ``buildSignedInfo`` method.
+
+
+Create a public/private key pair using OpenSSL
+----------------------------------------------
+
+* The basics command line steps to generate a private and public key using OpenSSL are as follows::
+
+    openssl genrsa -out privatekey.pem 1024
+    openssl req -new -x509 -key privatekey.pem -out publickey.cer -days 1825
+    openssl pkcs12 -export -out public_privatekey.pfx -inkey privatekey.pem -in publickey.cer
+
