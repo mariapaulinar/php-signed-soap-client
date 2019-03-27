@@ -1,6 +1,6 @@
 <?php
 
-namespace Ghindows\SoapClient;
+//namespace Ghindows\SoapClient;
 
 /**
  *
@@ -253,7 +253,8 @@ class SignedSoapClient extends \SoapClient
          *
          */
         $signNode = $secNode->appendChild($dom->createElementNS(self::DS_NS, 'ds:Signature'));
-        $signInfo = $signNode->appendChild($this->buildSignedInfo($dom, array('reqBody')));
+        $signature = $this->buildSignedInfo($dom, array('reqBody'));
+        $signInfo = $signNode->appendChild($signature);
 
         // now that SignedInfo is built, sign it actually
         openssl_sign($this->canonicalizeNode($signInfo), $signature, $pkeyid, OPENSSL_ALGO_SHA1);
