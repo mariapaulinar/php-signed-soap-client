@@ -1,6 +1,6 @@
 <?php
 
-//namespace Ghindows\SoapClient;
+namespace Ghindows\SoapClient;
 
 /**
  *
